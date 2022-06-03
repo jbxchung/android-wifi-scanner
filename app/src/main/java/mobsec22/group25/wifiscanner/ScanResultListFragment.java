@@ -136,7 +136,12 @@ public class ScanResultListFragment extends Fragment {
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
             // MAC address should be unique
-            holder.mIdView.setText(mValues.get(position).BSSID);
+            holder.mBSSIDView.setText(mValues.get(position).BSSID);
+            String ssid = mValues.get(position).SSID;
+            if (ssid.isEmpty()) {
+                ssid = "[Hidden SSID]";
+            }
+            holder.mSSIDView.setText(ssid);
             holder.mContentView.setText(mValues.get(position).capabilities);
 
             holder.itemView.setTag(mValues.get(position));
@@ -202,12 +207,14 @@ public class ScanResultListFragment extends Fragment {
         }
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            final TextView mIdView;
+            final TextView mBSSIDView;
+            final TextView mSSIDView;
             final TextView mContentView;
 
             ViewHolder(ScanresultListContentBinding binding) {
                 super(binding.getRoot());
-                mIdView = binding.idText;
+                mBSSIDView = binding.BSSID;
+                mSSIDView = binding.SSID;
                 mContentView = binding.content;
             }
 

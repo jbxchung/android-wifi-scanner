@@ -80,24 +80,9 @@ public class MainActivity extends AppCompatActivity {
         List<ScanResult> scanResults = wifiManager.getScanResults();
         Log.d(LOG_TAG, scanResults.toString());
 
-        // load fragment to show scan results
-//        ScanResultListFragment resultsFragment = new ScanResultListFragment();
-//        Bundle args = new Bundle();
-//        args.putParcelableArrayList(Constants.ARG_KEY_SCAN_RESULTS, new ArrayList<>(scanResults));
-//        resultsFragment.setArguments(args);
-//        this.loadFragment(resultsFragment);
-
         // launch activity of scan results
         Intent i = new Intent(this.appContext, ScanResultDetailHostActivity.class);
         i.putParcelableArrayListExtra(Constants.INTENT_EXTRA_SCAN_RESULTS, new ArrayList<>(scanResults));
         startActivity(i);
     }
-
-//    private void loadFragment(Fragment fragment) {
-//        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-////frame_container is your layout name in xml file
-//        transaction.replace(R.id.fragmentContainerView, fragment);
-//        transaction.addToBackStack(null);
-//        transaction.commit();
-//    }
 }
