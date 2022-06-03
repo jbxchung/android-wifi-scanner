@@ -20,14 +20,23 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import mobsec22.group25.wifiscanner.util.Constants;
 
@@ -38,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Context appContext;
     private WifiManager wifiManager;
+
+    Gson gson = new Gson();
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
@@ -93,21 +104,75 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    private void writeScanResultsToFile(List<ScanResult> scanResults) {
+    private void writeScanResultsToFile(List<ScanResult> newScanResults) {
         Log.d(LOG_TAG, "Writing test file");
         try {
             File path = appContext.getExternalFilesDir(null);
-            String filename = "textFile.txt";
-            String content = "test string";
+            File targetFile = new File(path, Constants.FILENAME_SCAN_RESULTS);
 
-            File targetFile = new File(path, filename);
+            // get existing data
+            Map<String, ScanResult> existingScanResults = this.getPersistedScanResults();
+            if (existingScanResults == null) {
+                existingScanResults = new HashMap<>();
+            }
 
-            FileOutputStream outputStream = new FileOutputStream(targetFile, true);
-            outputStream.write(content.getBytes(StandardCharsets.UTF_8));
+            // store as map where key is BSSID
+            Map<String, ScanResult> newScanResultMap = newScanResults.stream().collect(Collectors.toMap(sr -> sr.BSSID, Function.identity()));
+
+            // append to existing data
+            Map<String, ScanResult> allResults = new HashMap<>();
+            allResults.putAll(existingScanResults);
+            allResults.putAll(newScanResultMap);
+
+            // get it all as a JSON string
+            String fileContent = gson.toJson(allResults);
+
+            // overwrite
+            FileOutputStream outputStream = new FileOutputStream(targetFile);
+            outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
             outputStream.close();
         } catch (Exception e) {
             Log.e(LOG_TAG, "Error writing scan results to file");
             e.printStackTrace();
         }
+    }
+
+    private Map<String, ScanResult> getPersistedScanResults() {
+        String savedDataRaw = null;
+
+        try {
+            File path = appContext.getExternalFilesDir(null);
+            File savedScanResultsFile = new File(path, Constants.FILENAME_SCAN_RESULTS);
+
+
+            FileInputStream fileInputStream = new FileInputStream(savedScanResultsFile);
+            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+            BufferedReader reader = new BufferedReader(inputStreamReader);
+
+            StringBuilder savedDataBuilder = new StringBuilder();
+
+            String readString = reader.readLine();
+            while (readString != null) {
+                savedDataBuilder.append(readString);
+                readString = reader.readLine();
+            }
+
+            inputStreamReader.close();
+
+            savedDataRaw = savedDataBuilder.toString();
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Error reading existing scan results from file: " + e.toString());
+        }
+
+        Map<String, ScanResult> result = null;
+        if (savedDataRaw != null) {
+            try {
+                result = gson.fromJson(savedDataRaw, Map.class);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, "Error converting raw saved data to object: " + e.toString());
+            }
+        }
+
+        return result;
     }
 }
