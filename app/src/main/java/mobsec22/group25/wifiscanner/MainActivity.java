@@ -20,6 +20,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -80,9 +85,29 @@ public class MainActivity extends AppCompatActivity {
         List<ScanResult> scanResults = wifiManager.getScanResults();
         Log.d(LOG_TAG, scanResults.toString());
 
+        this.writeScanResultsToFile(scanResults);
+
         // launch activity of scan results
         Intent i = new Intent(this.appContext, ScanResultDetailHostActivity.class);
         i.putParcelableArrayListExtra(Constants.INTENT_EXTRA_SCAN_RESULTS, new ArrayList<>(scanResults));
         startActivity(i);
+    }
+
+    private void writeScanResultsToFile(List<ScanResult> scanResults) {
+        Log.d(LOG_TAG, "Writing test file");
+        try {
+            File path = appContext.getExternalFilesDir(null);
+            String filename = "textFile.txt";
+            String content = "test string";
+
+            File targetFile = new File(path, filename);
+
+            FileOutputStream outputStream = new FileOutputStream(targetFile, true);
+            outputStream.write(content.getBytes(StandardCharsets.UTF_8));
+            outputStream.close();
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Error writing scan results to file");
+            e.printStackTrace();
+        }
     }
 }
