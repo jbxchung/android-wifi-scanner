@@ -5,9 +5,12 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
@@ -17,16 +20,19 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.IntPredicate;
+
+import mobsec22.group25.wifiscanner.util.Constants;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getCanonicalName();
     // group 25 let's go!
     private static final Integer MAIN_PERMISSION_REQUEST_CODE = 25;
 
-    WifiManager wifiManager;
+    private Context appContext;
+    private WifiManager wifiManager;
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
@@ -34,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Context context = this.getApplicationContext();
-        this.wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        appContext = this.getApplicationContext();
+        this.wifiManager = (WifiManager) appContext.getSystemService(Context.WIFI_SERVICE);
     }
 
     @Override
@@ -71,9 +77,27 @@ public class MainActivity extends AppCompatActivity {
             Log.d(LOG_TAG, "Required permissions granted, proceeding with scan");
         }
 
-        List<ScanResult> results = wifiManager.getScanResults();
+        List<ScanResult> scanResults = wifiManager.getScanResults();
+        Log.d(LOG_TAG, scanResults.toString());
 
-        // TODO: launch activity of scan results
-        Log.d(LOG_TAG, results.toString());
+        // load fragment to show scan results
+//        ScanResultListFragment resultsFragment = new ScanResultListFragment();
+//        Bundle args = new Bundle();
+//        args.putParcelableArrayList(Constants.ARG_KEY_SCAN_RESULTS, new ArrayList<>(scanResults));
+//        resultsFragment.setArguments(args);
+//        this.loadFragment(resultsFragment);
+
+        // launch activity of scan results
+        Intent i = new Intent(this.appContext, ScanResultDetailHostActivity.class);
+        i.putParcelableArrayListExtra(Constants.INTENT_EXTRA_SCAN_RESULTS, new ArrayList<>(scanResults));
+        startActivity(i);
     }
+
+//    private void loadFragment(Fragment fragment) {
+//        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+////frame_container is your layout name in xml file
+//        transaction.replace(R.id.fragmentContainerView, fragment);
+//        transaction.addToBackStack(null);
+//        transaction.commit();
+//    }
 }

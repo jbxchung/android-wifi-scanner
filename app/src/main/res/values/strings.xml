@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Wifi Scanner</string>
+    <string name="button_text_scan">Scan</string>
+    <string name="title_activity_scan_result_detail_host">ScanResultDetailHostActivity</string>
+    <string name="title_scanresult_list">Scan Results</string>
+    <string name="title_scanresult_detail">ScanResult Detail</string>
 </resources>
