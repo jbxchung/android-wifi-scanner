@@ -105,11 +105,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void writeScanResultsToFile(List<ScanResult> newScanResults) {
-        Log.d(LOG_TAG, "Writing test file");
         try {
             File path = appContext.getExternalFilesDir(null);
             File targetFile = new File(path, Constants.FILENAME_SCAN_RESULTS);
 
+            Log.d(LOG_TAG, "Writing scan results to " + targetFile.getCanonicalPath());
             // get existing data
             Map<String, ScanResult> existingScanResults = this.getPersistedScanResults();
             if (existingScanResults == null) {
@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
             // get it all as a JSON string
             String fileContent = gson.toJson(allResults);
 
-            // overwrite
+            // overwrite file
             FileOutputStream outputStream = new FileOutputStream(targetFile);
             outputStream.write(fileContent.getBytes(StandardCharsets.UTF_8));
             outputStream.close();
@@ -140,10 +140,10 @@ public class MainActivity extends AppCompatActivity {
     private Map<String, ScanResult> getPersistedScanResults() {
         String savedDataRaw = null;
 
+        // read saved file from /Android/data/mobsec22.group25.wifiscanner/files/scan_results.json
         try {
             File path = appContext.getExternalFilesDir(null);
             File savedScanResultsFile = new File(path, Constants.FILENAME_SCAN_RESULTS);
-
 
             FileInputStream fileInputStream = new FileInputStream(savedScanResultsFile);
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
@@ -164,6 +164,7 @@ public class MainActivity extends AppCompatActivity {
             Log.e(LOG_TAG, "Error reading existing scan results from file: " + e.toString());
         }
 
+        // parse saved file into map of BSSID (String) to full scan result object (ScanResult)
         Map<String, ScanResult> result = null;
         if (savedDataRaw != null) {
             try {
