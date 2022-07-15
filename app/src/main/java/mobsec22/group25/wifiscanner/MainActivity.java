@@ -1,5 +1,9 @@
 package mobsec22.group25.wifiscanner;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.content.pm.PackageManager.*;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -12,10 +16,13 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -58,6 +65,13 @@ public class MainActivity extends AppCompatActivity {
 
         appContext = this.getApplicationContext();
         this.wifiManager = (WifiManager) appContext.getSystemService(Context.WIFI_SERVICE);
+
+        // Request permission for external storage when launched. Could possible be moved to onRequestPermissionResult method
+        ActivityCompat.requestPermissions( this, new String[]{READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE}, PERMISSION_GRANTED);
+
+        // Hack to prevents OS level interruption for file sharing outside the App
+        StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
+        StrictMode.setVmPolicy(builder.build());
     }
 
     @Override
@@ -65,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == MAIN_PERMISSION_REQUEST_CODE) {
-            if (grantResults.length > 0 && Arrays.stream(grantResults).allMatch(r -> r == PackageManager.PERMISSION_GRANTED)) {
+            if (grantResults.length > 0 && Arrays.stream(grantResults).allMatch(r -> r == PERMISSION_GRANTED)) {
                 Toast.makeText(MainActivity.this, "Required permissions granted! You may now initiate a scan.", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(MainActivity.this, "Please allow required permission to scan for wifi networks.", Toast.LENGTH_SHORT).show();
@@ -75,9 +89,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void startWifiScan(View view) {
         if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
+                != PERMISSION_GRANTED)
                 || (ContextCompat.checkSelfPermission(this, Manifest.permission.CHANGE_WIFI_STATE)
-                != PackageManager.PERMISSION_GRANTED)) {
+                != PERMISSION_GRANTED)) {
             Log.d(LOG_TAG, "Requesting permissions");
 
             ActivityCompat.requestPermissions(this,
@@ -175,5 +189,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return result;
+    }
+
+    public void btnShareResults(View view){
+
+        String scanResultsFile = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "scan_results.json";
+        // File path = appContext.getExternalFilesDir(null);
+        // File resultsFile = new File(path, Constants.FILENAME_SCAN_RESULTS);
+
+        File resultsFile = new File (scanResultsFile);
+
+        if(!resultsFile.exists()){
+            Toast.makeText( this, "File does not exists", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        Intent intentShareFile = new Intent(Intent.ACTION_SEND);
+        intentShareFile.setType("application/json");
+        intentShareFile.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://"+resultsFile));
+        startActivity(Intent.createChooser(intentShareFile, "Results being shared..."));
     }
 }
