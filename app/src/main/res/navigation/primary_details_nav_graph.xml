@@ -8,7 +8,7 @@
     <fragment
         android:id="@+id/scanresult_list_fragment"
         android:name="mobsec22.group25.wifiscanner.ScanResultListFragment"
-        android:label="ScanResultListFragment">
+        android:label="Scan Results">
         <action
             android:id="@+id/show_scanresult_detail"
             app:destination="@id/scanresult_detail_fragment" />
@@ -16,7 +16,7 @@
     <fragment
         android:id="@+id/scanresult_detail_fragment"
         android:name="mobsec22.group25.wifiscanner.ScanResultDetailFragment"
-        android:label="scanresult_detail"
+        android:label="Scan Result Details"
         tools:layout="@layout/fragment_scanresult_detail">
         <argument
             android:name="item_id"
