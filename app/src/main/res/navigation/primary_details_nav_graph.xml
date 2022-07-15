@@ -20,7 +20,7 @@
         tools:layout="@layout/fragment_scanresult_detail">
         <argument
             android:name="item_id"
-            android:defaultValue=""
-            app:argType="string" />
+            android:defaultValue="@null"
+            app:argType="android.net.wifi.ScanResult" />
     </fragment>
 </navigation>

@@ -148,7 +148,8 @@ public class ScanResultListFragment extends Fragment {
             holder.itemView.setOnClickListener(itemView -> {
                 ScanResult item = (ScanResult) itemView.getTag();
                 Bundle arguments = new Bundle();
-                arguments.putString(ScanResultDetailFragment.ARG_ITEM_ID, item.BSSID);
+                // pass entire ScanResult object into detail fragment
+                arguments.putParcelable(ScanResultDetailFragment.ARG_ITEM_ID, item);
                 if (mItemDetailFragmentContainer != null) {
                     Navigation.findNavController(mItemDetailFragmentContainer)
                             .navigate(R.id.fragment_scanresult_detail, arguments);
@@ -217,7 +218,6 @@ public class ScanResultListFragment extends Fragment {
                 mSSIDView = binding.SSID;
                 mContentView = binding.content;
             }
-
         }
     }
 }
