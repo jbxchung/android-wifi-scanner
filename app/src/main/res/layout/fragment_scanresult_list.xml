@@ -17,4 +17,15 @@
         app:layoutManager="LinearLayoutManager"
         tools:context="mobsec22.group25.wifiscanner.ScanResultDetailHostActivity"
         tools:listitem="@layout/scanresult_list_content" />
+
+    <Button
+        android:id="@+id/btnShareResults"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="112dp"
+        android:layout_marginBottom="24dp"
+        android:onClick="btnShareResults"
+        android:text="@string/share_results"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
