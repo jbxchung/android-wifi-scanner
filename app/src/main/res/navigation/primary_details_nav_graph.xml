@@ -21,6 +21,6 @@
         <argument
             android:name="item_id"
             android:defaultValue="@null"
-            app:argType="android.net.wifi.ScanResult" />
+            app:argType="mobsec22.group25.wifiscanner.vo.LocationScanResult" />
     </fragment>
 </navigation>

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import mobsec22.group25.wifiscanner.databinding.FragmentScanresultDetailBinding;
+import mobsec22.group25.wifiscanner.vo.LocationScanResult;
 
 /**
  * A fragment representing a single ScanResult detail screen.
@@ -41,7 +42,7 @@ public class ScanResultDetailFragment extends Fragment {
     /**
      * The placeholder content this fragment is presenting.
      */
-    private ScanResult scanResult;
+    private LocationScanResult locationScanResult;
     private CollapsingToolbarLayout mToolbarLayout;
     private TextView bssidTextView;
     private TextView capabilitiesTextView;
@@ -82,9 +83,9 @@ public class ScanResultDetailFragment extends Fragment {
             // Load the placeholder content specified by the fragment
             // arguments. In a real-world scenario, use a Loader
             // to load content from a content provider.
-            scanResult = getArguments().getParcelable(ARG_ITEM_ID);
+            locationScanResult = getArguments().getParcelable(ARG_ITEM_ID);
 
-            Log.d(LOG_TAG, "Scan Result Detail Fragment created for scan result: " + scanResult.BSSID);
+            Log.d(LOG_TAG, "Scan Result Detail Fragment created for scan result: " + locationScanResult.getWifiScanResult().BSSID);
         }
     }
 
@@ -115,16 +116,17 @@ public class ScanResultDetailFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     private void updateContent() {
-        if (scanResult != null) {
+        if (locationScanResult != null) {
+            ScanResult wifiScanResult = locationScanResult.getWifiScanResult();
 
-            String wifiStandard = wifiStandardMap.get(scanResult.getWifiStandard());
+            String wifiStandard = wifiStandardMap.get(wifiScanResult.getWifiStandard());
 
             wifiStandardTextView.setText("WiFi standard: " + wifiStandard);
-            bssidTextView.setText("BSSID: " + scanResult.BSSID);
-            capabilitiesTextView.setText("Capabilities: " + scanResult.capabilities);
+            bssidTextView.setText("BSSID: " + wifiScanResult.BSSID);
+            capabilitiesTextView.setText("Capabilities: " + wifiScanResult.capabilities);
 
             if (mToolbarLayout != null) {
-                mToolbarLayout.setTitle(scanResult.SSID);
+                mToolbarLayout.setTitle(wifiScanResult.SSID);
             }
         }
     }

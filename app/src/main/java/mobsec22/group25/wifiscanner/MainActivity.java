@@ -5,8 +5,6 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 
 import android.Manifest;
 import android.content.Context;
@@ -20,14 +18,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -39,6 +37,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import mobsec22.group25.wifiscanner.util.Constants;
+import mobsec22.group25.wifiscanner.vo.LocationScanResult;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = MainActivity.class.getCanonicalName();
@@ -47,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Context appContext;
     private WifiManager wifiManager;
+    private FusedLocationProviderClient fusedLocationClient;
 
     Gson gson = new Gson();
 
@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
         appContext = this.getApplicationContext();
         this.wifiManager = (WifiManager) appContext.getSystemService(Context.WIFI_SERVICE);
+        this.fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
 
     @Override
@@ -93,34 +94,50 @@ public class MainActivity extends AppCompatActivity {
             Log.d(LOG_TAG, "Required permissions granted, proceeding with scan");
         }
 
-        List<ScanResult> scanResults = wifiManager.getScanResults();
-        Log.d(LOG_TAG, scanResults.toString());
+        List<ScanResult> wifiScanResults = wifiManager.getScanResults();
 
-        this.writeScanResultsToFile(scanResults);
+        // add wifi scan results
+        List<LocationScanResult> scanResults = new ArrayList<>();
+        wifiScanResults.forEach(wifiScanResult -> {
+            scanResults.add(new LocationScanResult(null, wifiScanResult));
+        });
 
-        // launch activity of scan results
-        Intent i = new Intent(this.appContext, ScanResultDetailHostActivity.class);
-        i.putParcelableArrayListExtra(Constants.INTENT_EXTRA_SCAN_RESULTS, new ArrayList<>(scanResults));
-        startActivity(i);
+        // attempt to get location data
+        fusedLocationClient.getLastLocation()
+            .addOnSuccessListener(this, location -> {
+                if (location != null) {
+                    // if we got location data, associate it with all of the current scan results
+                    scanResults.forEach(scanResult -> scanResult.setLocation(location));
+                }
+
+                Log.d(LOG_TAG, scanResults.toString());
+
+                this.writeScanResultsToFile(scanResults);
+
+                // launch activity of scan results
+                Intent i = new Intent(this.appContext, ScanResultDetailHostActivity.class);
+                i.putParcelableArrayListExtra(Constants.INTENT_EXTRA_SCAN_RESULTS, new ArrayList<>(scanResults));
+                startActivity(i);
+            });
     }
 
-    private void writeScanResultsToFile(List<ScanResult> newScanResults) {
+    private void writeScanResultsToFile(List<LocationScanResult> newScanResults) {
         try {
             File path = appContext.getExternalFilesDir(null);
             File targetFile = new File(path, Constants.FILENAME_SCAN_RESULTS);
 
             Log.d(LOG_TAG, "Writing scan results to " + targetFile.getCanonicalPath());
             // get existing data
-            Map<String, ScanResult> existingScanResults = this.getPersistedScanResults();
+            Map<String, LocationScanResult> existingScanResults = this.getPersistedScanResults();
             if (existingScanResults == null) {
                 existingScanResults = new HashMap<>();
             }
 
             // store as map where key is BSSID
-            Map<String, ScanResult> newScanResultMap = newScanResults.stream().collect(Collectors.toMap(sr -> sr.BSSID, Function.identity()));
+            Map<String, LocationScanResult> newScanResultMap = newScanResults.stream().collect(Collectors.toMap(lsr -> lsr.getWifiScanResult().BSSID, Function.identity()));
 
             // append to existing data
-            Map<String, ScanResult> allResults = new HashMap<>();
+            Map<String, LocationScanResult> allResults = new HashMap<>();
             allResults.putAll(existingScanResults);
             allResults.putAll(newScanResultMap);
 
@@ -137,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private Map<String, ScanResult> getPersistedScanResults() {
+    private Map<String, LocationScanResult> getPersistedScanResults() {
         String savedDataRaw = null;
 
         // read saved file from /Android/data/mobsec22.group25.wifiscanner/files/scan_results.json
@@ -162,10 +179,11 @@ public class MainActivity extends AppCompatActivity {
             savedDataRaw = savedDataBuilder.toString();
         } catch (Exception e) {
             Log.e(LOG_TAG, "Error reading existing scan results from file: " + e.toString());
+            Log.e(LOG_TAG, "If this is the first run, a new file will be created.");
         }
 
         // parse saved file into map of BSSID (String) to full scan result object (ScanResult)
-        Map<String, ScanResult> result = null;
+        Map<String, LocationScanResult> result = null;
         if (savedDataRaw != null) {
             try {
                 result = gson.fromJson(savedDataRaw, Map.class);

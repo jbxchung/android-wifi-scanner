@@ -2,7 +2,6 @@ package mobsec22.group25.wifiscanner;
 
 import android.content.ClipData;
 import android.content.ClipDescription;
-import android.content.Context;
 import android.net.wifi.ScanResult;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
@@ -23,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import mobsec22.group25.wifiscanner.databinding.FragmentScanresultListBinding;
 import mobsec22.group25.wifiscanner.databinding.ScanresultListContentBinding;
 import mobsec22.group25.wifiscanner.util.Constants;
+import mobsec22.group25.wifiscanner.vo.LocationScanResult;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +94,7 @@ public class ScanResultListFragment extends Fragment {
         // get scan results passed into this fragment's parent activity via intent
         // we can't use getArguments because this fragment is rendered from XML layout
         // (as opposed to programmatically, where we could put arguments
-        ArrayList<ScanResult> scanResults = getActivity().getIntent().getParcelableArrayListExtra(Constants.INTENT_EXTRA_SCAN_RESULTS);
+        ArrayList<LocationScanResult> scanResults = getActivity().getIntent().getParcelableArrayListExtra(Constants.INTENT_EXTRA_SCAN_RESULTS);
         if (scanResults != null) {
             Log.d(LOG_TAG, scanResults.toString());
 
@@ -115,10 +114,10 @@ public class ScanResultListFragment extends Fragment {
     public static class SimpleItemRecyclerViewAdapter
             extends RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder> {
 
-        private final List<ScanResult> mValues;
+        private final List<LocationScanResult> mValues;
         private final View mItemDetailFragmentContainer;
 
-        SimpleItemRecyclerViewAdapter(List<ScanResult> items,
+        SimpleItemRecyclerViewAdapter(List<LocationScanResult> items,
                                       View itemDetailFragmentContainer) {
             mValues = items;
             mItemDetailFragmentContainer = itemDetailFragmentContainer;
@@ -135,20 +134,22 @@ public class ScanResultListFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
+            ScanResult wifiScanResult = mValues.get(position).getWifiScanResult();
+
             // MAC address should be unique
-            holder.mBSSIDView.setText(mValues.get(position).BSSID);
-            String ssid = mValues.get(position).SSID;
+            holder.mBSSIDView.setText(wifiScanResult.BSSID);
+            String ssid = wifiScanResult.SSID;
             if (ssid.isEmpty()) {
                 ssid = "[Hidden SSID]";
             }
             holder.mSSIDView.setText(ssid);
-            holder.mContentView.setText(mValues.get(position).capabilities);
+            holder.mContentView.setText(wifiScanResult.capabilities);
 
             holder.itemView.setTag(mValues.get(position));
             holder.itemView.setOnClickListener(itemView -> {
-                ScanResult item = (ScanResult) itemView.getTag();
+                LocationScanResult item = (LocationScanResult) itemView.getTag();
                 Bundle arguments = new Bundle();
-                // pass entire ScanResult object into detail fragment
+                // pass entire LocationScanResult object into detail fragment
                 arguments.putParcelable(ScanResultDetailFragment.ARG_ITEM_ID, item);
                 if (mItemDetailFragmentContainer != null) {
                     Navigation.findNavController(mItemDetailFragmentContainer)
@@ -176,7 +177,7 @@ public class ScanResultListFragment extends Fragment {
             holder.itemView.setOnLongClickListener(v -> {
                 // Setting the item id as the clip data so that the drop target is able to
                 // identify the id of the content
-                ClipData.Item clipItem = new ClipData.Item(mValues.get(position).BSSID);
+                ClipData.Item clipItem = new ClipData.Item(wifiScanResult.BSSID);
                 ClipData dragData = new ClipData(
                         ((ScanResult) v.getTag()).BSSID,
                         new String[]{ClipDescription.MIMETYPE_TEXT_PLAIN},
