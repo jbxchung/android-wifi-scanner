@@ -193,9 +193,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void btnShareResults(View view){
 
+        //Get the right path to the file ****Brandon, this is where I think my problem is ****
         String scanResultsFile = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + "scan_results.json";
-        // File path = appContext.getExternalFilesDir(null);
-        // File resultsFile = new File(path, Constants.FILENAME_SCAN_RESULTS);
 
         File resultsFile = new File (scanResultsFile);
 
