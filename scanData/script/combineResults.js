@@ -79,7 +79,7 @@ function getCsvString(scanResults, fields) {
 }
 
 // combine and augment our data
-const scanResults = interpretCapabilities(getCombinedResults('./rawData'));
+const scanResults = interpretCapabilities(getCombinedResults('./scanData/rawData'));
 
 // output to json
 console.log(`Writing to ${constants.OUTPUT_FILE_JSON}...`);
